@@ -1,0 +1,26 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Project Paradise: Core",
+    "description": "Are you so nostalgic of Pixel Paradise? Probably not, but do you want to play the games? Then this is for you: recreated free games for your Minecraft Bedrock Edition server/world.",
+    "uuid": "086cafee-67a1-4a67-898c-edd1257376ee",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 20, 10]
+  },
+  "modules": [
+    {
+      "description": "Script resources",
+      "language": "javascript",
+      "type": "script",
+      "uuid": "ef245e89-77e0-4d41-8b01-cec1729f1d5c",
+      "version": [1, 0, 0],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "1.4.0-beta"
+    }
+  ]
+}

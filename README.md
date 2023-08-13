@@ -1,2 +1,3 @@
-# paradise
-Trying to re-code some of the free games in Pixel Paradise, a server that was featured in the past
+# Project Paradise
+
+Are you so nostalgic of Pixel Paradise? Probably not, but do you want to play the games? Then this is for you: recreated free games for your Minecraft Bedrock Edition server/world.
