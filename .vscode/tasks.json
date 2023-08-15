@@ -1,12 +1,14 @@
 {
   "version": "2.0.0",
-  "tasks": [     
-      {
-        "label": "build",
-        "dependsOrder": "sequence",
-        "dependsOn": [
-            "gulp: default"
-        ]
+  "tasks": [
+    {
+      "label": "gulp: default",
+      "type": "shell",
+      "command": "gulp",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     }
   ]
 }

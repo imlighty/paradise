@@ -3,7 +3,7 @@ import { sendTitle } from './utils'
 
 export default class {
   private players: Player[] = []
-  private status: 'waiting' | 'running' | 'stopped' = 'waiting'
+  private status: 'waiting' | 'starting' | 'running' | 'stopped' = 'waiting'
   private task: number | null = null
 
   constructor() {
@@ -13,12 +13,9 @@ export default class {
 
   private initialize() {
     this.task = server.system.runInterval(() => {
-      if (this.status === 'waiting') {
-        sendTitle('§aWaiting for players... §7(§b!join§7)', 'overworld', 'actionbar')
-      }
       switch (this.status) {
         case 'waiting':
-          sendTitle('§aWaiting for players... §7(§b!join§7)', 'overworld', 'actionbar')
+          if (this.players.length < 2) sendTitle('§aWaiting for players... §7(§b!join§7)', 'overworld', 'actionbar')
           break
         case 'running':
           sendTitle(
@@ -66,53 +63,102 @@ export default class {
         }
       }
     })
+    server.world.afterEvents.entityHitEntity.subscribe((event) => {
+      if (event.damagingEntity.typeId === server.MinecraftEntityTypes.player.id) {
+        let player = this.getPlayer(event.damagingEntity as server.Player)
+        if (player === undefined) return
+        if (player.status === 'seeker') {
+          if (!event.hitEntity.hasTag('hiding')) {
+            ;(player as Player).player.applyDamage(1)
+            return
+          } else {
+            let hidingPlayer = event.hitEntity as server.Player
+            this.switchToSeeker(hidingPlayer)
+          }
+        }
+      }
+    })
   }
 
   addPlayer(player: server.Player) {
-    // let isSeeker = this.players.length === 0 ? true : false
-    let isSeeker = false
-    this.players.push({ player: player, status: isSeeker ? 'seeker' : 'hider' })
+    this.players.push({ player: player })
     player.sendMessage(`§aYou joined the queue for a game of §bGuess Who§a!`)
+  }
+
+  switchToSeeker(player: server.Player) {
+    let p = this.getPlayer(player)
+    if (p === undefined) return
+    p.status = 'seeker'
+    if (this.calculatePlayers('hider') === 0) this.endGame()
+    p.player.sendMessage(`§aYou are now a §bseeker§a!`)
+  }
+
+  getPlayer(player: server.Player): Player | undefined {
+    return this.players.find((p) => p.player.name === player.name)
   }
 
   calculatePlayers(type: 'hider' | 'seeker') {
     return this.players.filter((p) => p.status === type).length
   }
 
-  getRandomMob(): Mob {
-    let mobs: Mob[] = ['sheep', 'pig', 'cow', 'chicken', 'rabbit', 'llama', 'wolf']
+  getRandomMob(): string {
+    let mobs = ['sheep', 'pig', 'cow', 'wolf']
     return mobs[Math.floor(Math.random() * mobs.length)]
   }
 
   startGame() {
     this.status = 'running'
     this.players.forEach((p) => {
+      let probability = Math.random() * 100 + 1
+      let totalPlayers = this.players.length
+      this.getPlayer(p.player)!.status =
+        (this.calculatePlayers('seeker') < 1 && probability > 50) || this.calculatePlayers('hider') === totalPlayers - 1
+          ? 'seeker'
+          : 'hider'
       if (p.status === 'hider') {
         let mob = this.getRandomMob()
         server.system.run(() => {
-          p.hiding_entity = {
-            name: mob,
-            entity: p.player.dimension.spawnEntity('minecraft:' + mob, p.player.location),
-          }
+          p.hiding_entity = p.player.dimension.spawnEntity('minecraft:' + mob, p.player.location)
         })
         p.task = server.system.runInterval(() => {
           p.player.addEffect(server.EffectTypes.get('invisibility') as server.EffectType, 5, { showParticles: false })
-          p.hiding_entity!.entity.teleport(p.player.location)
-          p.hiding_entity!.entity.setRotation(p.player.getRotation())
+          if (!p.player.hasTag('hiding')) p.player.addTag('hiding')
+          if (p.hiding_entity !== undefined || !p.hiding_entity!.hasTag('hiding')) p.hiding_entity!.addTag('hiding')
+          p.hiding_entity!.teleport(p.player.location)
+          p.hiding_entity!.setRotation(p.player.getRotation())
+        })
+      } else if (p.status === 'seeker') {
+        p.task = server.system.runInterval(() => {
+          let health = p.player.getComponent('minecraft:health') as server.EntityHealthComponent
+          health.setCurrentValue(health.defaultValue)
         })
       }
     })
   }
-}
 
-type Mob = 'sheep' | 'pig' | 'cow' | 'chicken' | 'rabbit' | 'llama' | 'wolf'
+  endGame() {
+    this.status = 'stopped'
+    this.players.forEach((p) => {
+      if (p.task !== undefined) server.system.clearRun(p.task)
+      if (p.status === 'hider') {
+        p.hiding_entity!.kill()
+        p.player.removeTag('hiding')
+      }
+      p.player.removeTag('hiding')
+      p.player.removeTag('seeker')
+      p.player.removeTag('spectator')
+      try {
+        p.player.removeEffect('minecraft:invisibility')
+      } catch (err) {}
+      p.player.teleport(server.world.getDefaultSpawnLocation())
+    })
+    this.players = []
+  }
+}
 
 type Player = {
   player: server.Player
-  hiding_entity?: {
-    name: Mob
-    entity: server.Entity
-  }
+  hiding_entity?: server.Entity
   task?: number
-  status: 'hider' | 'seeker' | 'spectator'
+  status?: 'hider' | 'seeker' | 'spectator'
 }
