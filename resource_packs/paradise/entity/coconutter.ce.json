@@ -1,0 +1,21 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "paradise:coconutter",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/coconutter"
+      },
+      "geometry": {
+        "default": "geometry.coconutter"
+      },
+      "render_controllers": ["controller.render.coconutter"],
+      "animations": {
+        "stand": "controller.animation.coconutter.stand"
+      }
+    }
+  }
+}

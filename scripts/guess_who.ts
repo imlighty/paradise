@@ -5,17 +5,22 @@ import { JaylyDB } from './libs/jaylydb/index'
 export default class {
   private players: Player[] = []
   private status: 'waiting' | 'starting' | 'running' | 'stopped' = 'waiting'
-  private timeLeft: number = 20
+  private timeLeft = {
+    default: 240,
+    current: 0,
+  }
   private tasks: Map<string, number> | undefined = new Map()
   private db: JaylyDB
 
   constructor() {
+    this.timeLeft.current = this.timeLeft.default
     this.db = new JaylyDB('paradise:guess_who', false)
     console.log('Guess Who loaded!')
     this.initialize()
   }
 
   private initialize() {
+    server.world.getDimension('overworld').runCommand('difficulty peaceful')
     this.tasks?.set(
       'main',
       server.system.runInterval(() => {
@@ -25,7 +30,7 @@ export default class {
             break
           case 'running':
             sendTitle(
-              `§6Time left: §e${formattedTime(this.timeLeft)}\n§aSeekers: §b${this.calculatePlayers(
+              `§6Time left: §e${formattedTime(this.timeLeft.current)}\n§aSeekers: §b${this.calculatePlayers(
                 'seeker'
               )} §f| §aHiders: §b${this.calculatePlayers('hider')}`,
               'overworld',
@@ -106,7 +111,7 @@ export default class {
                 player.sendMessage(`§aAdded a location to the hiders spawn points!`)
                 break
               case 'purge_hiders_spawn':
-                this.db.set('hiders_spawn', '[]')
+                server.system.run(() => this.db.set('hiders_spawn', '[]'))
                 player.sendMessage(`§aPurged all hiders spawn points!`)
                 break
               case 'seekers_spawn':
@@ -120,7 +125,7 @@ export default class {
                 player.sendMessage(`§aAdded a location to the seekers spawn points!`)
                 break
               case 'purge_seekers_spawn':
-                this.db.set('seekers_spawn', '[]')
+                server.system.run(() => this.db.set('seekers_spawn', '[]'))
                 player.sendMessage(`§aPurged all seekers spawn points!`)
                 break
             }
@@ -161,8 +166,17 @@ export default class {
   }
 
   addPlayer(player: server.Player) {
-    this.players.push({ player: player })
-    player.sendMessage(`§aYou joined the queue for a game of §bGuess Who§a!`)
+    server.system.run(() => {
+      let maxPlayers =
+        (this.db.get('max_players') as number) === undefined ? 10 : (this.db.get('max_players') as number)
+      if (this.players.length >= maxPlayers) return player.sendMessage(`§cThe game is full!`)
+      if (this.getPlayer(player) !== undefined) return player.sendMessage(`§cYou are already in the game!`)
+      this.players.push({ player: player })
+      this.players.forEach((p) => {
+        p.player.playSound('random.pop')
+        p.player.sendMessage(`§b${player.name} §ajoined the queue! §7(${this.players.length}/${maxPlayers})`)
+      })
+    })
   }
 
   switchToSeeker(player: server.Player) {
@@ -171,6 +185,7 @@ export default class {
       if (p === undefined) return
       p.status = 'seeker'
       p.hiding_entity?.kill()
+      p.hiding_entity = undefined
       if (this.calculatePlayers('hider') === 0) this.endGame()
       let spawnPoints = JSON.parse((this.db.get('seekers_spawn') as string) || '[]')
       let spawnPoint = spawnPoints[Math.floor(Math.random() * spawnPoints.length)]
@@ -188,7 +203,7 @@ export default class {
   }
 
   getRandomMob(): string {
-    let mobs = ['sheep', 'pig', 'cow', 'wolf']
+    let mobs = ['coconutter']
     return mobs[Math.floor(Math.random() * mobs.length)]
   }
 
@@ -198,12 +213,10 @@ export default class {
     this.players.forEach((p) => {
       let probability = Math.random() * 100 + 1
       let totalPlayers = this.players.length
-      /*
-      this.getPlayer(p.player)!.status =
+      /* this.getPlayer(p.player)!.status =
         (this.calculatePlayers('seeker') < 1 && probability > 50) || this.calculatePlayers('hider') === totalPlayers - 1
           ? 'seeker'
-          : 'hider'
-      */
+          : 'hider' */
       this.getPlayer(p.player)!.status = 'hider'
       if (p.status === 'hider') {
         let mob = this.getRandomMob()
@@ -211,7 +224,7 @@ export default class {
           let spawnPoints = JSON.parse((this.db.get('hiders_spawn') as string) || '[]')
           let spawnPoint = spawnPoints[Math.floor(Math.random() * spawnPoints.length)]
           p.player.teleport(spawnPoint)
-          p.hiding_entity = p.player.dimension.spawnEntity('minecraft:' + mob, p.player.location)
+          p.hiding_entity = p.player.dimension.spawnEntity('paradise:' + mob, p.player.location)
         })
         p.task = server.system.runInterval(() => {
           p.player.addEffect(server.EffectTypes.get('invisibility') as server.EffectType, 5, { showParticles: false })
@@ -239,23 +252,25 @@ export default class {
     this.tasks?.set(
       'counter',
       server.system.runInterval(() => {
-        if (this.timeLeft === 0) {
+        if (this.timeLeft.current === 0) {
           this.endGame()
           server.system.clearRun(this.tasks?.get('counter')!)
           return
         }
-        this.timeLeft--
+        this.timeLeft.current--
       }, 20)
     )
   }
 
   endGame() {
-    if (this.calculatePlayers('hider') === 0) {
-      sendTitle('§aSeekers win!', 'overworld', 'title')
-    } else {
-      sendTitle('§aHiders win!', 'overworld', 'title')
-    }
-    this.status = 'stopped'
+    server.system.run(() => {
+      if (this.calculatePlayers('hider') === 0) {
+        sendTitle('§aSeekers win!', 'overworld', 'title')
+      } else {
+        sendTitle('§aHiders win!', 'overworld', 'title')
+      }
+      this.status = 'stopped'
+    })
     server.system.runTimeout(() => {
       this.status = 'waiting'
       this.players.forEach((p) => {
@@ -279,6 +294,7 @@ export default class {
         )
       })
       this.players = []
+      this.timeLeft.current = this.timeLeft.default
     }, 100)
   }
 }

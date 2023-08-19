@@ -1,0 +1,69 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.coconutter.stand": {
+      "loop": true,
+      "bones": {
+        "Body": {
+          "position": [0, -1, 0]
+        },
+        "Head": {
+          "rotation": [-15, 0, 0]
+        },
+        "LeftArm": {
+          "rotation": [-15, 0, -30]
+        },
+        "LeftFingers": {
+          "rotation": [0, 0, 50],
+          "position": [1, 0, 0]
+        },
+        "LeftRing": {
+          "rotation": [0, 0, -10]
+        },
+        "LeftMiddle": {
+          "rotation": [0, 0, -5]
+        },
+        "RightArm": {
+          "rotation": [-15, 0, 30]
+        },
+        "RightFingers": {
+          "rotation": [0, 0, -50],
+          "position": [-1, 0, 0]
+        },
+        "RightMiddle": {
+          "rotation": [0, 0, 5]
+        },
+        "RightRing": {
+          "rotation": [0, 0, 10]
+        },
+        "RightLeg": {
+          "rotation": [0, -2.5, 20],
+          "position": [2, -0.75, 0]
+        },
+        "LeftLeg": {
+          "rotation": [0, 2.5, -20],
+          "position": [-2, -0.75, 0]
+        },
+        "RightKnee": {
+          "rotation": [0, 5, -20],
+          "position": [-0.25, 0.5, 0]
+        },
+        "RightForearm": {
+          "rotation": [-20, 0, -45],
+          "position": [0, 1, 0]
+        },
+        "LeftForearm": {
+          "rotation": [-20, 0, 40],
+          "position": [0, 1, 0]
+        },
+        "LeftKnee": {
+          "rotation": [0, -5, 20],
+          "position": [0.25, 0.5, 0]
+        },
+        "Chest": {
+          "rotation": [15, 0, 0]
+        }
+      }
+    }
+  }
+}

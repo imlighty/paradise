@@ -1,0 +1,18 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Project Paradise: Core",
+    "description": "Are you so nostalgic of Pixel Paradise? Probably not, but do you want to play the games? Then this is for you: recreated free games for your Minecraft Bedrock Edition server/world.",
+    "uuid": "6465b9e9-f8f5-4aa9-9285-4fecb3d95293",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 20, 10]
+  },
+  "modules": [
+    {
+      "description": "Assets for games like Guess Who",
+      "type": "resources",
+      "uuid": "04a47302-59b2-4197-89d4-660a710088c6",
+      "version": [1, 0, 0]
+    }
+  ]
+}
