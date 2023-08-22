@@ -1,0 +1,26 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "minecraft:player",
+      "materials": {
+        "default": "entity_alphatest",
+        "cape": "entity_alphatest",
+        "animated": "player_animated",
+        "spectator": "player_spectator"
+      },
+      "textures": {
+        "default": "textures/entity/steve",
+        "test": "textures/entity/coconutter",
+        "cape": "textures/entity/cape_invisible"
+      },
+      "geometry": {
+        "default": "geometry.humanoid.custom",
+        "test": "geometry.coconutter",
+        "cape": "geometry.cape"
+      },
+      "render_controllers": [{ "controller.render.coconutter_": "!variable.is_first_person" }],
+      "enable_attachables": true
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "format_version": "1.10.0",
+  "render_controllers": {
+    "controller.render.coconutter_": {
+      "arrays": {
+        "textures": {
+          "Array.skins": ["Texture.default", "Texture.test"]
+        },
+        "geometries": {
+          "Array.geo": ["geometry.default", "geometry.test"]
+        }
+      },
+      "geometry": "Array.geo[query.variant]",
+      "materials": [
+        {
+          "*": "material.default"
+        }
+      ],
+      "textures": ["Array.skins[query.variant]"]
+    }
+  }
+}
